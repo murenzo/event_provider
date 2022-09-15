@@ -6,11 +6,11 @@ describe EventProvider do
     expect(EventProvider.registered_events_count).to eq(0)
   end
 
-  describe '.subscribe' do
+  after :each do
+    EventProvider.clear_events
+  end
 
-    after :each do
-      EventProvider.clear_events
-    end
+  describe '.subscribe' do
 
     context 'when subscribing a handler to an event' do
       it 'registers an event alongside the handler' do
@@ -92,6 +92,30 @@ describe EventProvider do
         expect(EventProvider.registered_events_count).to eq(1)
         expect(EventProvider.event_handlers_count(event_name: :order_created)).to eq(1)
       end
+    end
+  end
+
+  describe '.broadcast' do
+    it 'broadcasts the event to the respective handlers' do
+      EventProvider.subscribe(event_name: :order_created,
+                              handler_name: :notify_admin) do |options|
+        "Notifying admin that an order has been placed #{options.join(',')}."
+      end
+
+      EventProvider.subscribe(event_name: :order_created,
+                              handler_name: :notify_customer) do |options|
+        "Notifying customer that an order has been placed #{options.join(',')}."
+      end
+
+      result = EventProvider.broadcast(
+        'a', 'b', 'c', 'd',
+        event_name: :order_created
+      )
+
+      expect(result).to contain_exactly(
+        'Notifying admin that an order has been placed a,b,c,d.',
+        'Notifying customer that an order has been placed a,b,c,d.',
+      )
     end
   end
 end

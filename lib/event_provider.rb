@@ -1,9 +1,15 @@
 require 'pry'
+require_relative 'event_provider_helper'
 
+# frozen_string_literal: true
+
+# EventProvider class used to manage events and their handlers.
 class EventProvider
   @events = {}
 
   class << self
+    include EventProviderHelper
+
     def subscribe(event_name:, handler_name:, &block)
       event_key = event_name.to_sym
       handler_key = handler_name.to_sym
@@ -28,16 +34,15 @@ class EventProvider
       events.delete(event_key)
     end
 
-    def registered_events_count
-      events.keys.count
-    end
+    def broadcast(*options, event_name:)
+      event_key = event_name.to_sym
+      broadcasted_messages = []
 
-    def event_handlers_count(event_name:)
-      events[event_name].keys.count
-    end
+      events[event_key].values.each do |proc|
+        broadcasted_messages << proc.call(options)
+      end
 
-    def clear_events
-      events.clear
+      broadcasted_messages
     end
 
     private
