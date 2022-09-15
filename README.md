@@ -6,60 +6,47 @@ Rails Provider Class (RPC) is a light weight class that can be used to register 
 
 1. To register an event and subscribe a ruby block as handler.
 ```
-EventProvider.subscribe(event_name: :order_created,
-                        handler_name: :notify_customer) do |_|
+EventProvider.subscribe(event_name: :order_created, handler_name: :notify_customer) do |_|
   'Notifying the customer that their order has been created'
 end
 ```
 
 2. To register an event and subscribe multiple ruby block as handlers, the handler_name has to be unique.
 ```
-EventProvider.subscribe(event_name: :order_created,
-                        handler_name: :notify_customer) do |_|
+EventProvider.subscribe(event_name: :order_created, handler_name: :notify_customer) do |_|
   'Notifying the customer that their order has been created'
 end
 
-EventProvider.subscribe(event_name: :order_created,
-                        handler_name: :notify_admin) do |_|
+EventProvider.subscribe(event_name: :order_created, handler_name: :notify_admin) do |_|
   'Notifying the customer that their order has been created'
 end
 ```
 
 3. To unsubscribe a ruby block as handler from an event. Due to the nature of blocks, we had to introduce the concept of assigning unique keys to registred handlers. This helps with constant look up when unsubscribing a handler from an event.
 ```
-EventProvider.subscribe(event_name: :order_created,
-                        handler_name: :notify_customer) do |_|
+EventProvider.subscribe(event_name: :order_created, handler_name: :notify_customer) do |_|
   'Notifying the customer that their order has been created'
 end
 
-EventProvider.unsubscribe(event_name: :order_created,
-                          handler_name: :notify_customer)
+EventProvider.unsubscribe(event_name: :order_created, handler_name: :notify_customer)
 end
 ```
 
-4. To broadcast an event which then allows the respective handlers to respond. Also, an arbitrary number of arguments can be passed as argument which then can be called by all the stored blocks.
+4. To broadcast an event which then allows the respective handlers to respond. Also, an arbitrary number of arguments can be passed as argument which then can be called by all the stored blocks. It returns an array of messages returned from registered handlers.
 ```
-EventProvider.subscribe(event_name: :order_created,
-                        handler_name: :notify_customer) do |options|
+EventProvider.subscribe(event_name: :order_created, handler_name: :notify_customer) do |options|
   "Notifying customer that an order has been placed #{options.join(',')}."
 end
 
-result = EventProvider.broadcast('a', 'b', 'c', 'd',
-                        event_name: :order_created
-                        )
-end
+result = EventProvider.broadcast('a', 'b', 'c', 'd', event_name: :order_created)
 ```
 
-4. To broadcast all events which then allows each respective registered handlers to respond. Also, an arbitrary number of arguments can be passed as argument which then can be called by all the stored blocks.
+4. To broadcast all events which then allows each respective registered handlers to respond. Also, an arbitrary number of arguments can be passed as argument which then can be called by all the stored blocks. It returns an array of messages returned from registered handlers.
 ```
-EventProvider.subscribe(event_name: :order_created,
-                        handler_name: :notify_customer) do |options|
+EventProvider.subscribe(event_name: :order_created, handler_name: :notify_customer) do |options|
   "Notifying customer that an order has been placed #{options.join(',')}."
 end
 
-result = EventProvider.broadcast('a', 'b', 'c', 'd',
-                        event_name: nil
-                        )
-end
+result = EventProvider.broadcast('a', 'b', 'c', 'd', event_name: nil)
 ```
 
