@@ -1,5 +1,6 @@
+# frozen_string_literal: true
+
 require_relative '../lib/event_provider'
-require 'pry'
 
 describe EventProvider do
   it 'has zero events registered by default' do

@@ -1,4 +1,3 @@
-require 'pry'
 require_relative 'event_provider_helper'
 
 # frozen_string_literal: true
