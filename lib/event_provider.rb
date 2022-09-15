@@ -11,46 +11,59 @@ class EventProvider
     include EventProviderHelper
 
     def subscribe(event_name:, handler_name:, &block)
-      event_key = event_name.to_sym
-      handler_key = handler_name.to_sym
-
-      unless event_registered?(event_key)
-        events[event_key] = { handler_key => block }
+      unless event_registered?(symbolize(event_name))
+        events[symbolize(event_name)] = { symbolize(handler_name) => block }
         return
       end
 
-      events[event_key].store(handler_key, block)
+      events[symbolize(event_name)].store(symbolize(handler_name), block)
     end
 
     def unsubscribe(event_name:, handler_name:)
-      event_key = event_name.to_sym
-      handler_key = handler_name.to_sym
-
-      if event_handlers_count(event_name: event_key) > 1
-        events[event_key].delete(handler_key)
+      if event_handlers_count(event_name: symbolize(event_name)) > 1
+        events[symbolize(event_name)].delete(symbolize(handler_name))
         return
       end
 
-      events.delete(event_key)
+      events.delete(symbolize(event_name))
     end
 
     def broadcast(*options, event_name:)
-      event_key = event_name.to_sym
-      broadcasted_messages = []
+      return broadcast_events(options) if event_name.nil?
 
-      events[event_key].values.each do |proc|
-        broadcasted_messages << proc.call(options)
-      end
-
-      broadcasted_messages
+      broadcast_event(symbolize(event_name), options)
     end
 
     private
 
     attr_reader :events
 
+    def broadcast_event(event_name, options)
+      broadcasted_messages = []
+
+      events[event_name].values.each do |proc|
+        broadcasted_messages << proc.call(options)
+      end
+
+      broadcasted_messages
+    end
+
+    def broadcast_events(options)
+      broadcasted_messages = []
+
+      broadcasted_messages << events.keys.map do |key|
+        broadcast_event(key, options)
+      end
+
+      broadcasted_messages.flatten!
+    end
+
     def event_registered?(event_name)
       events.keys.any? { |key| key == event_name }
+    end
+
+    def symbolize(value)
+      value.to_sym
     end
   end
 end

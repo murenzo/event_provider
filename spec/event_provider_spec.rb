@@ -16,7 +16,7 @@ describe EventProvider do
       it 'registers an event alongside the handler' do
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_customer) do |_|
-          puts 'Notifying the customer that their order has been created'
+          'Notifying the customer that their order has been created'
         end
 
         expect(EventProvider.registered_events_count).to eq(1)
@@ -28,12 +28,12 @@ describe EventProvider do
       it 'registers the events alongside their respective handler' do
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_customer) do |_|
-          puts 'Notifying the customer that their order has been created'
+          'Notifying the customer that their order has been created'
         end
 
         EventProvider.subscribe(event_name: :order_dispatched,
                                 handler_name: :notify_customer) do |_|
-          puts 'Notifying the customer that their order has been dispatched'
+          'Notifying the customer that their order has been dispatched'
         end
 
         expect(EventProvider.registered_events_count).to eq(2)
@@ -46,12 +46,12 @@ describe EventProvider do
       it 'registers all handlers to the event' do
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_customer) do |_|
-          puts 'Notifying the customer that their order has been created'
+          'Notifying the customer that their order has been created'
         end
 
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_admin) do |_|
-          puts 'Notifying admin that an order has been placed'
+          'Notifying admin that an order has been placed'
         end
 
         expect(EventProvider.registered_events_count).to eq(1)
@@ -65,7 +65,7 @@ describe EventProvider do
       it 'removes both handler and event from registered events' do
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_customer) do |_|
-          puts 'Notifying the customer that their order has been created'
+          'Notifying the customer that their order has been created'
         end
 
         EventProvider.unsubscribe(event_name: :order_created,
@@ -79,12 +79,12 @@ describe EventProvider do
       it 'removes only the handler from the event' do
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_customer) do |_|
-          puts 'Notifying the customer that their order has been created'
+          'Notifying the customer that their order has been created'
         end
 
         EventProvider.subscribe(event_name: :order_created,
                                 handler_name: :notify_admin) do |_|
-          puts 'Notifying admin that an order has been placed'
+          'Notifying admin that an order has been placed'
         end
 
         EventProvider.unsubscribe(event_name: :order_created, handler_name: :notify_admin)
@@ -96,26 +96,52 @@ describe EventProvider do
   end
 
   describe '.broadcast' do
-    it 'broadcasts the event to the respective handlers' do
-      EventProvider.subscribe(event_name: :order_created,
-                              handler_name: :notify_admin) do |options|
-        "Notifying admin that an order has been placed #{options.join(',')}."
+    context 'when an event_name is passed' do
+      it 'broadcasts the event to the respective handlers' do
+        EventProvider.subscribe(event_name: :order_created,
+                                handler_name: :notify_admin) do |options|
+          "Notifying admin that an order has been placed #{options.join(',')}."
+        end
+
+        EventProvider.subscribe(event_name: :order_created,
+                                handler_name: :notify_customer) do |options|
+          "Notifying customer that an order has been placed #{options.join(',')}."
+        end
+
+        result = EventProvider.broadcast(
+          'a', 'b', 'c', 'd',
+          event_name: :order_created
+        )
+
+        expect(result).to contain_exactly(
+          'Notifying admin that an order has been placed a,b,c,d.',
+          'Notifying customer that an order has been placed a,b,c,d.',
+        )
       end
+    end
 
-      EventProvider.subscribe(event_name: :order_created,
-                              handler_name: :notify_customer) do |options|
-        "Notifying customer that an order has been placed #{options.join(',')}."
+    context 'when no event_name is passed' do
+      it 'broadcasts all events to the respective handlers' do
+        EventProvider.subscribe(event_name: :order_created,
+                                handler_name: :notify_admin) do |options|
+          "Notifying admin that an order has been placed #{options.join(',')}."
+        end
+
+        EventProvider.subscribe(event_name: :order_dispatched,
+                                handler_name: :notify_customer) do |options|
+          "Notifying the customer that their order has been dispatched  #{options.join(',')}."
+        end
+
+        result = EventProvider.broadcast(
+          'a', 'b', 'c', 'd',
+          event_name: nil
+        )
+
+        expect(result).to contain_exactly(
+          'Notifying admin that an order has been placed a,b,c,d.',
+          'Notifying the customer that their order has been dispatched  a,b,c,d.'
+        )
       end
-
-      result = EventProvider.broadcast(
-        'a', 'b', 'c', 'd',
-        event_name: :order_created
-      )
-
-      expect(result).to contain_exactly(
-        'Notifying admin that an order has been placed a,b,c,d.',
-        'Notifying customer that an order has been placed a,b,c,d.',
-      )
     end
   end
 end
